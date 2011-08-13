@@ -80,7 +80,7 @@ class AuthServiceProxy(object):
 		'version': '1.1',
 	 	'method': self.__serviceName,
 		'params': args,
-		'id': self.__idcnt})
+		'id': self.__idcnt}, use_decimal=True)
 	 self.__conn.request('POST', self.__url.path, postdata,
 	 	{ 'Host' : self.__url.hostname,
 		  'User-Agent' : USER_AGENT,
@@ -92,7 +92,7 @@ class AuthServiceProxy(object):
              raise JSONRPCException({
 	     	'code' : -342, 'message' : 'missing HTTP response from server'})
 
-	 resp = json.loads(httpresp.read(), parse_float=decimal.Decimal)
+	 resp = json.loads(httpresp.read(), use_decimal=True)
          if resp['error'] != None:
              raise JSONRPCException(resp['error'])
 	 elif 'result' not in resp:
