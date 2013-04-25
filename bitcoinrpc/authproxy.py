@@ -67,9 +67,11 @@ class AuthServiceProxy(object):
         else:
             port = self.__url.port
         self.__id_count = 0
-        authpair = "%s:%s" % (self.__url.username, self.__url.password)
-        authpair = authpair.encode('utf8')
-        self.__auth_header = "Basic %s" % base64.b64encode(authpair)
+        self.__auth_header = ""
+        if self.__url.username is not None:
+            authpair = "%s:%s" % (self.__url.username, self.__url.password or "")
+            authpair = authpair.encode('utf8')
+            self.__auth_header = "Basic %s" % base64.b64encode(authpair).decode('utf8')
         if self.__url.scheme == 'https':
             self.__conn = httplib.HTTPSConnection(self.__url.hostname, port,
                                                   None, None, False,
@@ -93,12 +95,7 @@ class AuthServiceProxy(object):
                                'method': self.__service_name,
                                'params': args,
                                'id': self.__id_count})
-        self.__conn.request('POST', self.__url.path, postdata,
-                            {'Host': self.__url.hostname,
-                             'User-Agent': USER_AGENT,
-                             'Authorization': self.__auth_header,
-                             'Content-type': 'application/json'})
-
+        self._request(postdata)
         response = self._get_response()
         if response['error'] is not None:
             raise JSONRPCException(response['error'])
@@ -108,14 +105,17 @@ class AuthServiceProxy(object):
         else:
             return response['result']
 
+    def _request(self, postdata):
+        headers = {'Host': self.__url.hostname,
+                   'User-Agent': USER_AGENT,
+                   'Content-type': 'application/json'}
+        if self.__auth_header:
+            headers['Authorization'] = self.__auth_header
+        self.__conn.request('POST', self.__url.path, postdata, headers)
+
     def _batch(self, rpc_call_list):
         postdata = json.dumps(list(rpc_call_list))
-        self.__conn.request('POST', self.__url.path, postdata,
-                            {'Host': self.__url.hostname,
-                             'User-Agent': USER_AGENT,
-                             'Authorization': self.__auth_header,
-                             'Content-type': 'application/json'})
-
+        self._request(postdata)
         return self._get_response()
 
     def _get_response(self):
