@@ -11,5 +11,5 @@ setup(name='python-bitcoinrpc',
       maintainer='Jeff Garzik',
       maintainer_email='<jgarzik@exmulti.com>',
       url='http://www.github.com/jgarzik/python-bitcoinrpc',
-      packages=['bitcoinrpc'],
+      packages=['bitcoinrpc','jsonrpc'],
       classifiers=['License :: OSI Approved :: GNU Library or Lesser General Public License (LGPL)', 'Operating System :: OS Independent'])
