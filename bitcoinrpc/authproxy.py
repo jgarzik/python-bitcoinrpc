@@ -53,8 +53,13 @@ HTTP_TIMEOUT = 30
 
 class JSONRPCException(Exception):
     def __init__(self, rpc_error):
-        Exception.__init__(self)
         self.error = rpc_error
+        self.message = rpc_error['message']
+        self.code = rpc_error['code']
+
+    def __str__(self):
+        msg = '({code}) {msg}'.format(code=self.code, msg=self.message)
+        return msg
 
 
 class AuthServiceProxy(object):
