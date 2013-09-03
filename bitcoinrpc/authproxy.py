@@ -67,9 +67,17 @@ class AuthServiceProxy(object):
         else:
             port = self.__url.port
         self.__id_count = 0
-        authpair = "%s:%s" % (self.__url.username, self.__url.password)
-        authpair = authpair.encode('utf8')
-        self.__auth_header = "Basic %s" % base64.b64encode(authpair)
+        (user, passwd) = (self.__url.username, self.__url.password)
+        try:
+            user = user.encode('utf8')
+        except AttributeError:
+            pass
+        try:
+            passwd = passwd.encode('utf8')
+        except AttributeError:
+            pass
+        authpair = user + b':' + passwd
+        self.__auth_header = b'Basic ' + base64.b64encode(authpair)
         
         if connection: 
             # Callables re-use the connection of the original proxy 
