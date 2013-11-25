@@ -105,14 +105,21 @@ class AuthServiceProxy(object):
                                'method': self.__service_name,
                                'params': args,
                                'id': self.__id_count})
-        self.__conn.request('POST', self.__url.path, postdata,
+        try:
+            self.__conn.request('POST', self.__url.path, postdata,
                             {'Host': self.__url.hostname,
                              'User-Agent': USER_AGENT,
+                             'Connection': 'close',
                              'Authorization': self.__auth_header,
                              'Content-type': 'application/json'})
+        except:
+            self.__conn.close()
+            return None;
 
         response = self._get_response()
+        self.__conn.close()
         if response['error'] is not None:
+            print("AAA error: ", response['error'])
             raise JSONRPCException(response['error'])
         elif 'result' not in response:
             raise JSONRPCException({
