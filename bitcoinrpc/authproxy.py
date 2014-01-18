@@ -104,7 +104,7 @@ class AuthServiceProxy(object):
         postdata = json.dumps({'version': '1.1',
                                'method': self.__service_name,
                                'params': args,
-                               'id': self.__id_count})
+                               'id': self.__id_count}, ensure_ascii=False).encode('utf-8')
         self.__conn.request('POST', self.__url.path, postdata,
                             {'Host': self.__url.hostname,
                              'User-Agent': USER_AGENT,
@@ -121,7 +121,7 @@ class AuthServiceProxy(object):
             return response['result']
 
     def _batch(self, rpc_call_list):
-        postdata = json.dumps(list(rpc_call_list))
+        postdata = json.dumps(list(rpc_call_list), ensure_ascii=False).encode('utf-8')
         self.__conn.request('POST', self.__url.path, postdata,
                             {'Host': self.__url.hostname,
                              'User-Agent': USER_AGENT,
