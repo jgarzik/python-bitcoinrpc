@@ -57,6 +57,11 @@ class JSONRPCException(Exception):
         self.error = rpc_error
 
 
+def EncodeDecimal(o):
+    if isinstance(o, decimal.Decimal):
+        return round(o, 8)
+    raise TypeError(repr(o) + " is not JSON serializable")
+
 class AuthServiceProxy(object):
     __id_count = 0
 
@@ -105,7 +110,7 @@ class AuthServiceProxy(object):
         postdata = json.dumps({'version': '1.1',
                                'method': self.__service_name,
                                'params': args,
-                               'id': AuthServiceProxy.__id_count})
+                               'id': AuthServiceProxy.__id_count}, default=EncodeDecimal)
         self.__conn.request('POST', self.__url.path, postdata,
                             {'Host': self.__url.hostname,
                              'User-Agent': USER_AGENT,
@@ -122,7 +127,7 @@ class AuthServiceProxy(object):
             return response['result']
 
     def _batch(self, rpc_call_list):
-        postdata = json.dumps(list(rpc_call_list))
+        postdata = json.dumps(list(rpc_call_list), default=EncodeDecimal)
         self.__conn.request('POST', self.__url.path, postdata,
                             {'Host': self.__url.hostname,
                              'User-Agent': USER_AGENT,
