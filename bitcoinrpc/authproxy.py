@@ -58,6 +58,8 @@ class JSONRPCException(Exception):
 
 
 class AuthServiceProxy(object):
+    __id_count = 0
+
     def __init__(self, service_url, service_name=None, timeout=HTTP_TIMEOUT, connection=None):
         self.__service_url = service_url
         self.__service_name = service_name
@@ -66,7 +68,6 @@ class AuthServiceProxy(object):
             port = 80
         else:
             port = self.__url.port
-        self.__id_count = 0
         (user, passwd) = (self.__url.username, self.__url.password)
         try:
             user = user.encode('utf8')
@@ -99,12 +100,12 @@ class AuthServiceProxy(object):
         return AuthServiceProxy(self.__service_url, name, connection=self.__conn)
 
     def __call__(self, *args):
-        self.__id_count += 1
+        AuthServiceProxy.__id_count += 1
 
         postdata = json.dumps({'version': '1.1',
                                'method': self.__service_name,
                                'params': args,
-                               'id': self.__id_count})
+                               'id': AuthServiceProxy.__id_count})
         self.__conn.request('POST', self.__url.path, postdata,
                             {'Host': self.__url.hostname,
                              'User-Agent': USER_AGENT,
