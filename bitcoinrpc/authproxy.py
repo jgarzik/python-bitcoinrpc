@@ -130,16 +130,35 @@ class AuthServiceProxy(object):
         else:
             return response['result']
 
-    def _batch(self, rpc_call_list):
-        postdata = json.dumps(list(rpc_call_list), default=EncodeDecimal)
+    def batch_(self, rpc_calls):
+        """Batch RPC call.
+           Pass array of arrays: [ [ "method", params... ], ... ]
+           Returns array of results.
+        """
+        batch_data = []
+        for rpc_call in rpc_calls:
+            AuthServiceProxy.__id_count += 1
+            m = rpc_call.pop(0)
+            batch_data.append({"jsonrpc":"2.0", "method":m, "params":rpc_call, "id":AuthServiceProxy.__id_count})
+
+        postdata = json.dumps(batch_data, default=EncodeDecimal)
         log.debug("--> "+postdata)
         self.__conn.request('POST', self.__url.path, postdata,
                             {'Host': self.__url.hostname,
                              'User-Agent': USER_AGENT,
                              'Authorization': self.__auth_header,
                              'Content-type': 'application/json'})
-
-        return self._get_response()
+        results = []
+        responses = self._get_response()
+        for response in responses:
+            if response['error'] is not None:
+                raise JSONRPCException(response['error'])
+            elif 'result' not in response:
+                raise JSONRPCException({
+                    'code': -343, 'message': 'missing JSON-RPC result'})
+            else:
+                results.append(response['result'])
+        return results
 
     def _get_response(self):
         http_response = self.__conn.getresponse()
