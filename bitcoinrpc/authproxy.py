@@ -77,6 +77,34 @@ def EncodeDecimal(o):
         return round(o, 8)
     raise TypeError(repr(o) + " is not JSON serializable")
 
+class SharedConnection(object):
+    def __init__(self, url, timeout):
+        self.__url = url
+        self.__timeout = timeout
+        self.__conn = None
+
+    def request(self, *args, **kwargs):
+        retries = 0
+        while True:
+            if self.__conn is None:
+                port = self.__url.port or 80
+                if self.__url.scheme == 'https':
+                    self.__conn = httplib.HTTPSConnection(self.__url.hostname, port,
+                                                          timeout=self.__timeout)
+                else:
+                    self.__conn = httplib.HTTPConnection(self.__url.hostname, port,
+                                                         timeout=self.__timeout)
+            try:
+                return self.__conn.request(*args, **kwargs)
+            except (httplib.NotConnected, httplib.ImproperConnectionState):
+                if retries:
+                    raise
+                self.__conn = None
+                retries += 1
+
+    def getresponse(self):
+        return self.__conn.getresponse()
+
 class AuthServiceProxy(object):
     __id_count = 0
 
@@ -84,10 +112,6 @@ class AuthServiceProxy(object):
         self.__service_url = service_url
         self.__service_name = service_name
         self.__url = urlparse.urlparse(service_url)
-        if self.__url.port is None:
-            port = 80
-        else:
-            port = self.__url.port
         (user, passwd) = (self.__url.username, self.__url.password)
         try:
             user = user.encode('utf8')
@@ -103,12 +127,8 @@ class AuthServiceProxy(object):
         if connection:
             # Callables re-use the connection of the original proxy
             self.__conn = connection
-        elif self.__url.scheme == 'https':
-            self.__conn = httplib.HTTPSConnection(self.__url.hostname, port,
-                                                  timeout=timeout)
         else:
-            self.__conn = httplib.HTTPConnection(self.__url.hostname, port,
-                                                 timeout=timeout)
+            self.__conn = SharedConnection(self.__url, timeout)
 
     def __getattr__(self, name):
         if name.startswith('__') and name.endswith('__'):
