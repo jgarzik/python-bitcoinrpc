@@ -100,6 +100,8 @@ class AuthServiceProxy(object):
         authpair = user + b':' + passwd
         self.__auth_header = b'Basic ' + base64.b64encode(authpair)
 
+        self.__timeout = timeout
+
         if connection:
             # Callables re-use the connection of the original proxy
             self.__conn = connection
@@ -116,7 +118,7 @@ class AuthServiceProxy(object):
             raise AttributeError
         if self.__service_name is not None:
             name = "%s.%s" % (self.__service_name, name)
-        return AuthServiceProxy(self.__service_url, name, connection=self.__conn)
+        return AuthServiceProxy(self.__service_url, name, self.__timeout, self.__conn)
 
     def __call__(self, *args):
         AuthServiceProxy.__id_count += 1
@@ -132,6 +134,7 @@ class AuthServiceProxy(object):
                              'User-Agent': USER_AGENT,
                              'Authorization': self.__auth_header,
                              'Content-type': 'application/json'})
+        self.__conn.sock.settimeout(self.__timeout)
 
         response = self._get_response()
         if response['error'] is not None:
