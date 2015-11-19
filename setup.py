@@ -3,7 +3,7 @@
 from distutils.core import setup
 
 setup(name='python-bitcoinrpc',
-      version='0.1',
+      version='0.3',
       description='Enhanced version of python-jsonrpc for use with Bitcoin',
       long_description=open('README').read(),
       author='Jeff Garzik',
