@@ -137,8 +137,9 @@ class AuthServiceProxy(object):
         self.__conn.sock.settimeout(self.__timeout)
 
         response = self._get_response()
-        if response['error'] is not None:
-            raise JSONRPCException(response['error'])
+        if 'error' in response:
+            if response['error'] is not None:
+                raise JSONRPCException(response['error'])
         elif 'result' not in response:
             raise JSONRPCException({
                 'code': -343, 'message': 'missing JSON-RPC result'})
