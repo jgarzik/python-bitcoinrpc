@@ -1,29 +1,40 @@
+=================
+python-bitcoinrpc
+=================
+
 AuthServiceProxy is an improved version of python-jsonrpc.
 
 It includes the following generic improvements:
 
-- HTTP connections persist for the life of the AuthServiceProxy object
-- sends protocol 'version', per JSON-RPC 1.1
-- sends proper, incrementing 'id'
-- uses standard Python json lib
-- can optionally log all RPC calls and results
-- JSON-2.0 batch support
+* HTTP connections persist for the life of the AuthServiceProxy object
+* sends protocol 'version', per JSON-RPC 1.1
+* sends proper, incrementing 'id'
+* uses standard Python json lib
+* can optionally log all RPC calls and results
+* JSON-2.0 batch support
 
 It also includes the following bitcoin-specific details:
 
-- sends Basic HTTP authentication headers
-- parses all JSON numbers that look like floats as Decimal,
+* sends Basic HTTP authentication headers
+* parses all JSON numbers that look like floats as Decimal,
   and serializes Decimal values to JSON-RPC connections.
 
-Installation:
+Installation
+============
 
-- change the first line of setup.py to point to the directory of your installation of python 2.*
-- run setup.py
+1. change the first line of setup.py to point to the directory of your installation of python 2.*
+2. run setup.py
 
 Note: This will only install bitcoinrpc. If you also want to install jsonrpc to preserve 
 backwards compatibility, you have to replace 'bitcoinrpc' with 'jsonrpc' in setup.py and run it again.
 
-Example usage:
+Or simply install the library using pip::
+
+    pip install python-bitcoinrpc
+
+Example
+=======
+.. code:: python
 
     from bitcoinrpc.authproxy import AuthServiceProxy, JSONRPCException
 
@@ -39,7 +50,9 @@ Example usage:
     block_times = [ block["time"] for block in blocks ]
     print(block_times)
 
-Logging all RPC calls to stderr:
+Logging all RPC calls to stderr
+===============================
+.. code:: python
 
     from bitcoinrpc.authproxy import AuthServiceProxy, JSONRPCException
     import logging
@@ -50,7 +63,8 @@ Logging all RPC calls to stderr:
     rpc_connection = AuthServiceProxy("http://%s:%s@127.0.0.1:8332"%(rpc_user, rpc_password))
     print(rpc_connection.getinfo())
 
-Produces output on stderr like:
+Produces output on stderr like
 
     DEBUG:BitcoinRPC:-1-> getinfo []
     DEBUG:BitcoinRPC:<-1- {"connections": 8, ...etc }
+
