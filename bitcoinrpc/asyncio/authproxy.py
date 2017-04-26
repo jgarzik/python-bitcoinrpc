@@ -77,7 +77,7 @@ def EncodeDecimal(o):
 class AuthServiceProxy(object):
     __id_count = 0
 
-    async def __init__(self, service_url, service_name=None, timeout=HTTP_TIMEOUT, connection=None):
+    def __init__(self, service_url, service_name=None, timeout=HTTP_TIMEOUT, connection=None):
         self.__service_url = service_url
         self.__service_name = service_name
         self.__url = urlparse.urlparse(service_url)
@@ -131,7 +131,7 @@ class AuthServiceProxy(object):
                              'User-Agent': USER_AGENT,
                              'Authorization': self.__auth_header,
                              'Content-type': 'application/json'})
-        self.__conn.sock.settimeout(self.__timeout)
+        #self.__conn.sock.settimeout(self.__timeout)
 
         response = await self._get_response()
         if response.get('error') is not None:
@@ -183,7 +183,8 @@ class AuthServiceProxy(object):
             raise JSONRPCException({
                 'code': -342, 'message': 'non-JSON HTTP response with \'%i %s\' from server' % (http_response.status, http_response.reason)})
 
-        responsedata = await http_response.read().decode('utf8')
+        responsedata = await http_response.read()
+        responsedata = responsedata.decode('utf8')
         response = json.loads(responsedata, parse_float=decimal.Decimal)
         if "error" in response and response["error"] is None:
             log.debug("<-%s- %s"%(response["id"], json.dumps(response["result"], default=EncodeDecimal)))
