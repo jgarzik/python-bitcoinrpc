@@ -131,7 +131,12 @@ class AuthServiceProxy(object):
                              'User-Agent': USER_AGENT,
                              'Authorization': self.__auth_header,
                              'Content-type': 'application/json'})
-        #self.__conn.sock.settimeout(self.__timeout)
+        # It seems that yieldfrom.http.client takes care for timeout
+        #   that is provided through __init__(.) .
+        # With asyncio, timeout can be also detected with:
+        #   AbstractEventLoop.call_later() .
+        # So this call isn't needed!
+        # self.__conn.socket().settimeout(self.__timeout)
 
         response = await self._get_response()
         if response.get('error') is not None:
