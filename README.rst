@@ -68,3 +68,12 @@ Produces output on stderr like
     DEBUG:BitcoinRPC:-1-> getinfo []
     DEBUG:BitcoinRPC:<-1- {"connections": 8, ...etc }
 
+Socket timeouts under heavy load
+================================
+Pass the timeout argument to prevent "socket timed out" exceptions:
+
+.. code:: python
+
+    rpc_connection = AuthServiceProxy(
+        "http://%s:%s@%s:%s"%(rpc_user, rpc_password, rpc_host, rpc_port),
+        timeout=120)
