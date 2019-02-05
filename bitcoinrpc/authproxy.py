@@ -80,7 +80,7 @@ def EncodeDecimal(o):
 class AuthServiceProxy(object):
     __id_count = 0
 
-    def __init__(self, service_url, service_name=None, timeout=HTTP_TIMEOUT, connection=None):
+    def __init__(self, service_url, service_name=None, timeout=HTTP_TIMEOUT, connection=None, keep_connection=True):
         self.__service_url = service_url
         self.__service_name = service_name
         self.__url = urlparse.urlparse(service_url)
@@ -101,16 +101,20 @@ class AuthServiceProxy(object):
         self.__auth_header = b'Basic ' + base64.b64encode(authpair)
 
         self.__timeout = timeout
+        self.__keep_connection = keep_connection
 
-        if connection:
-            # Callables re-use the connection of the original proxy
-            self.__conn = connection
-        elif self.__url.scheme == 'https':
-            self.__conn = httplib.HTTPSConnection(self.__url.hostname, port,
-                                                  timeout=timeout)
+        if self.__keep_connection:
+            if connection:
+                # Callables re-use the connection of the original proxy
+                self.__conn = connection
+            elif self.__url.scheme == 'https':
+                self.__conn = httplib.HTTPSConnection(self.__url.hostname, port,
+                                                      timeout=timeout)
+            else:
+                self.__conn = httplib.HTTPConnection(self.__url.hostname, port,
+                                                     timeout=timeout)
         else:
-            self.__conn = httplib.HTTPConnection(self.__url.hostname, port,
-                                                 timeout=timeout)
+            self.__conn = None
 
     def __getattr__(self, name):
         if name.startswith('__') and name.endswith('__'):
@@ -129,12 +133,23 @@ class AuthServiceProxy(object):
                                'method': self.__service_name,
                                'params': args,
                                'id': AuthServiceProxy.__id_count}, default=EncodeDecimal)
-        self.__conn.request('POST', self.__url.path, postdata,
+
+        if not self.__keep_connection:
+            if self.__url.scheme == 'https':
+                __conn = httplib.HTTPSConnection(self.__url.hostname, self.__url.port,
+                                                      timeout=self.__timeout)
+            else:
+                __conn = httplib.HTTPConnection(self.__url.hostname, self.__url.port,
+                                                      timeout=self.__timeout)
+        else:
+            __conn = self.__conn
+
+        __conn.request('POST', self.__url.path, postdata,
                             {'Host': self.__url.hostname,
                              'User-Agent': USER_AGENT,
                              'Authorization': self.__auth_header,
                              'Content-type': 'application/json'})
-        self.__conn.sock.settimeout(self.__timeout)
+        __conn.sock.settimeout(self.__timeout)
 
         response = self._get_response()
         if response.get('error') is not None:
@@ -142,7 +157,10 @@ class AuthServiceProxy(object):
         elif 'result' not in response:
             raise JSONRPCException({
                 'code': -343, 'message': 'missing JSON-RPC result'})
-        
+
+        if not self.__keep_connection:
+            __conn.close()
+
         return response['result']
 
     def batch_(self, rpc_calls):
