@@ -130,11 +130,15 @@ class AuthServiceProxy(object):
                                'method': self.__service_name,
                                'params': args,
                                'id': AuthServiceProxy.__id_count}, default=EncodeDecimal)
-        self.__conn.request('POST', self.__url.path, postdata,
-                            {'Host': self.__url.hostname,
-                             'User-Agent': USER_AGENT,
-                             'Authorization': self.__auth_header,
-                             'Content-type': 'application/json'})
+        try:
+            self.__conn.request('POST', self.__url.path, postdata,
+                                {'Host': self.__url.hostname,
+                                'User-Agent': USER_AGENT,
+                                'Authorization': self.__auth_header,
+                                'Content-type': 'application/json'})
+        except Exception as e:
+            self.__conn.close()
+            raise e
         self.__conn.sock.settimeout(self.__timeout)
 
         response = self._get_response()
@@ -159,11 +163,15 @@ class AuthServiceProxy(object):
 
         postdata = json.dumps(batch_data, default=EncodeDecimal)
         log.debug("--> "+postdata)
-        self.__conn.request('POST', self.__url.path, postdata,
-                            {'Host': self.__url.hostname,
-                             'User-Agent': USER_AGENT,
-                             'Authorization': self.__auth_header,
-                             'Content-type': 'application/json'})
+        try:
+            self.__conn.request('POST', self.__url.path, postdata,
+                                {'Host': self.__url.hostname,
+                                'User-Agent': USER_AGENT,
+                                'Authorization': self.__auth_header,
+                                'Content-type': 'application/json'})
+        except Exception as e:
+            self.__conn.close()
+            raise e
         results = []
         responses = self._get_response()
         if isinstance(responses, (dict,)):
