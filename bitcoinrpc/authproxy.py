@@ -91,6 +91,13 @@ class AuthServiceProxy(object):
             port = self.__url.port
         (user, passwd) = (self.__url.username, self.__url.password)
         try:
+            # This will not work with python2, try ignoring. Nothing bad
+            # will happen unless there are special quuoted characters in
+            # HTTP password.
+            passwd = urlparse.unquote(passwd)
+        except AttributeError:
+            pass
+        try:
             user = user.encode('utf8')
         except AttributeError:
             pass
