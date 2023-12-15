@@ -166,11 +166,10 @@ class AuthServiceProxy(object):
                              'Content-type': 'application/json'})
         results = []
         responses = self._get_response()
-        if isinstance(responses, (dict,)):
-            if ('error' in responses) and (responses['error'] is not None):
-                raise JSONRPCException(responses['error'])
-            raise JSONRPCException({
-                'code': -32700, 'message': 'Parse error'})
+
+        if type(responses) != list:
+            responses = [responses]
+
         for response in responses:
             if response['error'] is not None:
                 raise JSONRPCException(response['error'])
