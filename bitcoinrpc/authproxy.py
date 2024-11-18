@@ -139,7 +139,7 @@ class AuthServiceProxy(object):
 
         response = self._get_response()
         if response.get('error') is not None:
-            raise JSONRPCException(response['error'])
+            raise JSONRPCException(response.get('error'))
         elif 'result' not in response:
             raise JSONRPCException({
                 'code': -343, 'message': 'missing JSON-RPC result'})
@@ -172,8 +172,8 @@ class AuthServiceProxy(object):
             raise JSONRPCException({
                 'code': -32700, 'message': 'Parse error'})
         for response in responses:
-            if response['error'] is not None:
-                raise JSONRPCException(response['error'])
+            if response.get('error') is not None:
+                raise JSONRPCException(response.get('error'))
             elif 'result' not in response:
                 raise JSONRPCException({
                     'code': -343, 'message': 'missing JSON-RPC result'})
@@ -194,7 +194,7 @@ class AuthServiceProxy(object):
 
         responsedata = http_response.read().decode('utf8')
         response = json.loads(responsedata, parse_float=decimal.Decimal)
-        if "error" in response and response["error"] is None:
+        if "error" in response and response.get('error') is None:
             log.debug("<-%s- %s"%(response["id"], json.dumps(response["result"], default=EncodeDecimal)))
         else:
             log.debug("<-- "+responsedata)
